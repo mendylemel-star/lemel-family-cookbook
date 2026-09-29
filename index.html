@@ -146,6 +146,32 @@
   }
   form.rform textarea { resize: vertical; min-height: 90px; font-family: 'Work Sans', sans-serif; }
   form.rform .hint { font-size: 0.78rem; color: var(--ink-soft); margin-top: 3px; }
+
+  .sort-row { display: flex; align-items: center; gap: 8px; margin: -6px 0 16px 2px; }
+  .sort-row label { font-size: 0.82rem; color: var(--ink-soft); }
+  .sort-row select {
+    font-family: 'Work Sans', sans-serif; font-size: 0.85rem; padding: 5px 10px; border-radius: 6px;
+    border: 1.5px solid var(--border); background: var(--card); color: var(--ink);
+  }
+
+  @page { margin: 1.5cm; }
+  @media print {
+    body * { display: none !important; }
+    #detail-overlay {
+      display: block !important; position: static !important; inset: auto !important;
+      background: none !important; padding: 0 !important;
+    }
+    .sheet {
+      display: block !important; box-shadow: none !important; border: none !important;
+      max-width: 100% !important; margin: 0 !important; padding: 0 !important; background: #fff !important;
+    }
+    #print-area { display: block !important; }
+    #print-area div, #print-area h2, #print-area h4, #print-area ul { display: block !important; }
+    #print-area li { display: list-item !important; }
+    #print-area, #print-area * { color: #000 !important; }
+    .cat-tag, h4 { color: #444 !important; }
+    .close-x, .sheet-actions { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -216,7 +242,7 @@
   var categories = [];
   recipes.forEach(function (r) { if (categories.indexOf(r.category) === -1) categories.push(r.category); });
 
-  var state = { view: 'home', category: null, query: '' };
+  var state = { view: 'home', category: null, query: '', sort: 'az' };
   var canEdit = true;
 
   function levenshtein(a, b) {
@@ -292,6 +318,11 @@
       return '<button class="tile" style="--tc:' + tc + '" data-cat="' + escapeHtml(c) + '">' +
         iconFor(c) + '<span class="tname">' + escapeHtml(c) + '</span><span class="tcount">' + n + ' recipes</span></button>';
     }).join('') + '</div>';
+    var recent = recipes.slice().sort(function (a, b) { return b.id - a.id; }).slice(0, 5);
+    if (recent.length) {
+      html += '<div class="section-title"><h2>Recently Added</h2></div>';
+      html += '<div class="grid">' + recent.map(recipeCard).join('') + '</div>';
+    }
     html += '<div class="section-title"><h2>A Few Favorites</h2></div>';
     html += '<div class="grid">' + featured.map(recipeCard).join('') + '</div>';
     var main = document.getElementById('main');
@@ -306,8 +337,20 @@
     bindCards(main);
   }
 
+  function sortList(list) {
+    var sorted = list.slice();
+    if (state.sort === 'az') {
+      sorted.sort(function (a, b) { return a.title.localeCompare(b.title); });
+    } else if (state.sort === 'newest') {
+      sorted.sort(function (a, b) { return b.id - a.id; });
+    } else if (state.sort === 'source') {
+      sorted.sort(function (a, b) { return (a.source || '\uffff').localeCompare(b.source || '\uffff'); });
+    }
+    return sorted;
+  }
+
   function renderList(title) {
-    var list = filteredRecipes();
+    var list = sortList(filteredRecipes());
     var main = document.getElementById('main');
     var html = '<button class="back-link" id="back-btn">&larr; All categories</button>';
     html += '<div class="section-title"><h2>' + escapeHtml(title) + '</h2></div>';
@@ -315,6 +358,11 @@
     if (list.length === 0) {
       html += '<div class="empty-state"><p class="display">No recipes found</p><p>Try a different search, or add this one yourself.</p></div>';
     } else {
+      html += '<div class="sort-row"><label for="sort-select">Sort:</label><select id="sort-select">' +
+        '<option value="az"' + (state.sort === 'az' ? ' selected' : '') + '>A\u2013Z</option>' +
+        '<option value="newest"' + (state.sort === 'newest' ? ' selected' : '') + '>Newest first</option>' +
+        '<option value="source"' + (state.sort === 'source' ? ' selected' : '') + '>By contributor</option>' +
+        '</select></div>';
       html += '<div class="grid">' + list.map(recipeCard).join('') + '</div>';
     }
     main.innerHTML = html;
@@ -322,6 +370,13 @@
       state.view = 'home'; state.category = null; state.query = ''; document.getElementById('search').value = '';
       render();
     });
+    var sortSelect = document.getElementById('sort-select');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', function () {
+        state.sort = this.value;
+        render();
+      });
+    }
     bindCards(main);
   }
 
@@ -342,17 +397,22 @@
     var sheet = document.getElementById('detail-sheet');
     sheet.innerHTML =
       '<button class="close-x" id="detail-close">&times;</button>' +
+      '<div id="print-area">' +
       '<div class="cat-tag">' + escapeHtml(r.category) + '</div>' +
       '<h2 class="display">' + escapeHtml(r.title) + '</h2>' +
       (r.source ? '<div class="src">' + escapeHtml(r.source) + '</div>' : '') +
       (r.ingredients && r.ingredients.length ? '<h4>Ingredients</h4><ul>' + r.ingredients.map(function (i) { return '<li>' + escapeHtml(i) + '</li>'; }).join('') + '</ul>' : '') +
       (r.instructions ? '<h4>Directions</h4><div class="instructions">' + escapeHtml(r.instructions) + '</div>' : '') +
       (!r.instructions && (!r.ingredients || !r.ingredients.length) && r.raw ? '<h4>Recipe</h4><div class="instructions">' + escapeHtml(r.raw) + '</div>' : '') +
+      '</div>' +
       '<div class="sheet-actions" id="detail-actions"></div>';
     document.getElementById('detail-close').addEventListener('click', closeDetail);
     var actions = document.getElementById('detail-actions');
+    var actionsHtml = '<button class="btn" id="print-btn">Print</button>';
+    if (canEdit) actionsHtml += '<button class="btn" id="edit-btn">Edit</button>';
+    actions.innerHTML = actionsHtml;
+    document.getElementById('print-btn').addEventListener('click', function () { window.print(); });
     if (canEdit) {
-      actions.innerHTML = '<button class="btn" id="edit-btn">Edit</button>';
       document.getElementById('edit-btn').addEventListener('click', function () { openForm(r); });
     }
     document.getElementById('detail-overlay').classList.remove('hidden');
@@ -476,11 +536,6 @@
       '<div class="empty-state"><p class="display">Couldn\'t load the cookbook</p><p>Check your internet connection and refresh the page.</p></div>';
   });
 })();
-</script>
-  <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-  }
 </script>
 </body>
 </html>
