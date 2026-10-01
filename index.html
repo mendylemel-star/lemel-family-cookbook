@@ -5,6 +5,10 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6B2A3E">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lemel's Family Cookbook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,6 +151,12 @@
   form.rform textarea { resize: vertical; min-height: 90px; font-family: 'Work Sans', sans-serif; }
   form.rform .hint { font-size: 0.78rem; color: var(--ink-soft); margin-top: 3px; }
 
+  .offline-banner {
+    background: var(--gold); color: #fff; text-align: center; font-size: 0.82rem; font-weight: 600;
+    padding: 7px 10px; display: none;
+  }
+  .offline-banner.show { display: block; }
+
   .sort-row { display: flex; align-items: center; gap: 8px; margin: -6px 0 16px 2px; }
   .sort-row label { font-size: 0.82rem; color: var(--ink-soft); }
   .sort-row select {
@@ -176,6 +186,7 @@
 </head>
 <body>
 
+<div class="offline-banner" id="offline-banner">You're offline — showing recipes saved from your last visit. Adding/editing needs an internet connection.</div>
 <header class="site-head">
   <div class="brand">
     <svg viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -516,6 +527,24 @@
     render();
   });
 
+  var OFFLINE_CACHE_KEY = 'cookbook_recipes_cache_v1';
+
+  function showOfflineBanner(show) {
+    var banner = document.getElementById('offline-banner');
+    if (banner) banner.classList.toggle('show', !!show);
+  }
+
+  function saveOfflineCache(list) {
+    try { localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(list)); } catch (e) { /* storage full/unavailable, ignore */ }
+  }
+
+  function loadOfflineCache() {
+    try {
+      var raw = localStorage.getItem(OFFLINE_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
   document.getElementById('main').innerHTML = '<div class="empty-state"><p class="display">Loading the cookbook…</p></div>';
   document.getElementById('add-fab').style.display = 'none';
 
@@ -528,13 +557,31 @@
     });
     rebuildCategoriesFrom(recipes);
     canEdit = true;
+    showOfflineBanner(false);
+    saveOfflineCache(recipes);
     document.getElementById('add-fab').style.display = 'flex';
     render();
   }).catch(function (err) {
     console.error(err);
-    document.getElementById('main').innerHTML =
-      '<div class="empty-state"><p class="display">Couldn\'t load the cookbook</p><p>Check your internet connection and refresh the page.</p></div>';
+    var cached = loadOfflineCache();
+    if (cached && cached.length) {
+      recipes = cached;
+      rebuildCategoriesFrom(recipes);
+      canEdit = false;
+      showOfflineBanner(true);
+      document.getElementById('add-fab').style.display = 'none';
+      render();
+    } else {
+      document.getElementById('main').innerHTML =
+        '<div class="empty-state"><p class="display">Couldn\'t load the cookbook</p><p>Check your internet connection and refresh the page.</p></div>';
+    }
   });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function (e) { console.error('SW registration failed:', e); });
+    });
+  }
 })();
 </script>
 </body>
