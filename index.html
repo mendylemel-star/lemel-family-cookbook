@@ -164,24 +164,86 @@
     border: 1.5px solid var(--border); background: var(--card); color: var(--ink);
   }
 
-  @page { margin: 1.5cm; }
-  @media print {
-    body * { display: none !important; }
-    #detail-overlay {
-      display: block !important; position: static !important; inset: auto !important;
-      background: none !important; padding: 0 !important;
-    }
-    .sheet {
-      display: block !important; box-shadow: none !important; border: none !important;
-      max-width: 100% !important; margin: 0 !important; padding: 0 !important; background: #fff !important;
-    }
-    #print-area { display: block !important; }
-    #print-area div, #print-area h2, #print-area h4, #print-area ul { display: block !important; }
-    #print-area li { display: list-item !important; }
-    #print-area, #print-area * { color: #000 !important; }
-    .cat-tag, h4 { color: #444 !important; }
-    .close-x, .sheet-actions { display: none !important; }
+  .book-cta {
+    margin: 38px 0 6px; padding: 22px 20px; text-align: center; background: var(--card);
+    border: 1.5px dashed var(--border); border-radius: 12px;
   }
+  .book-cta h3 { font-size: 1.1rem; margin: 0 0 4px; }
+  .book-cta p { margin: 0 0 14px; color: var(--ink-soft); font-size: 0.88rem; }
+
+  #book-root { display: none; }
+
+  @page { margin: 1.6cm 1.5cm 1.8cm; }
+  @page { @bottom-center { content: counter(page); font-family: 'Work Sans', sans-serif; font-size: 9pt; color: #8a7f70; } }
+
+  @media print {
+    /* ---- printing ONE recipe ---- */
+    body.print-single { background: #fff !important; }
+    body.print-single > *:not(#detail-overlay) { display: none !important; }
+    body.print-single #detail-overlay {
+      display: block !important; position: static !important; inset: auto !important;
+      background: none !important; padding: 0 !important; overflow: visible !important;
+    }
+    body.print-single .sheet {
+      box-shadow: none !important; border: none !important; max-width: 100% !important;
+      margin: 0 !important; padding: 0 !important; background: #fff !important;
+    }
+    body.print-single #print-area, body.print-single #print-area * { color: #000 !important; }
+    body.print-single .cat-tag, body.print-single h4 { color: #444 !important; }
+    body.print-single .close-x, body.print-single .sheet-actions { display: none !important; }
+
+    /* ---- printing the WHOLE cookbook ---- */
+    body.print-book { background: #fff !important; }
+    body.print-book > *:not(#book-root) { display: none !important; }
+    body.print-book #book-root { display: block; color: #2C2420; font-family: 'Work Sans', Arial, sans-serif; }
+
+    body.print-book .book-cover { text-align: center; padding-top: 7cm; break-after: page; page-break-after: always; }
+    body.print-book .book-cover h1 {
+      font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 38pt; line-height: 1.1;
+      margin: 22pt 0 10pt; color: #2C2420;
+    }
+    body.print-book .btag {
+      font-size: 9.5pt; letter-spacing: 0.16em; text-transform: uppercase; color: #9C7A2E;
+      font-weight: 600; margin-bottom: 26pt;
+    }
+    body.print-book .bmeta { font-size: 10.5pt; color: #6B5F55; margin-top: 4pt; }
+
+    body.print-book .book-toc h2 {
+      font-family: 'Fraunces', Georgia, serif; font-size: 24pt; margin: 0 0 14pt; padding-bottom: 8pt;
+      border-bottom: 1.5pt solid #9C7A2E; color: #2C2420;
+    }
+    body.print-book .toc-row {
+      display: flex; justify-content: space-between; padding: 7pt 2pt;
+      border-bottom: 0.5pt dotted #b9ad97; font-size: 12pt;
+    }
+    body.print-book .toc-row span:last-child { color: #6B5F55; font-size: 10pt; }
+
+    body.print-book .book-cat { break-before: page; page-break-before: always; }
+    body.print-book .book-cat-title {
+      font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 24pt; margin: 0 0 14pt;
+      padding-bottom: 6pt; border-bottom: 2pt solid var(--cc); color: #2C2420;
+    }
+    body.print-book .book-recipes { display: block; }
+    body.print-book .book-recipe {
+      break-inside: avoid; page-break-inside: avoid; margin: 0 0 14pt; padding: 11pt 14pt 12pt;
+      border: 0.75pt solid #d9d0bd; border-left: 4.5pt solid var(--cc); border-radius: 4pt;
+    }
+    body.print-book .book-recipe h3 {
+      font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 17pt; line-height: 1.15;
+      margin: 0 0 2pt; color: #2C2420;
+    }
+    body.print-book .bsrc { font-style: italic; font-size: 10.5pt; color: #6B5F55; margin-bottom: 4pt; }
+    body.print-book .book-recipe h4 {
+      font-family: 'Work Sans', Arial, sans-serif; font-size: 8.5pt; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--cc); margin: 8pt 0 3pt;
+    }
+    body.print-book .book-recipe ul { margin: 0; padding-left: 14pt; font-size: 11.5pt; line-height: 1.38; }
+    body.print-book .book-recipe ul.cols { column-count: 2; column-gap: 20pt; }
+    body.print-book .book-recipe li { break-inside: avoid; }
+    body.print-book .book-recipe li.sub { list-style: none; margin-left: -14pt; font-weight: 600; margin-top: 3pt; }
+    body.print-book .book-recipe p { margin: 0; font-size: 11.5pt; line-height: 1.45; }
+  }
+
   /* ===== LARGE PRINT =====
      To change the text size, change the number on the "--pt" line below
      (14pt = medium, 16pt = large, 18pt = extra large, 20pt = huge). */
@@ -233,6 +295,8 @@
 
 <div class="overlay hidden" id="detail-overlay"><div class="sheet" id="detail-sheet"></div></div>
 <div class="overlay hidden" id="form-overlay"><div class="sheet" id="form-sheet"></div></div>
+
+<div id="book-root"></div>
 
 <script>
 (function () {
@@ -356,6 +420,9 @@
     }
     html += '<div class="section-title"><h2>A Few Favorites</h2></div>';
     html += '<div class="grid">' + featured.map(recipeCard).join('') + '</div>';
+    html += '<div class="book-cta"><h3 class="display">Print the full cookbook</h3>' +
+      '<p>Every recipe, organized by category. In the print window, choose "Save as PDF" to keep a copy.</p>' +
+      '<button class="btn primary" id="print-book-btn">Print / Save as PDF</button></div>';
     var main = document.getElementById('main');
     main.innerHTML = html;
     Array.prototype.forEach.call(main.querySelectorAll('.tile'), function (t) {
@@ -365,8 +432,77 @@
         render();
       });
     });
+    var bookBtn = document.getElementById('print-book-btn');
+    if (bookBtn) bookBtn.addEventListener('click', printBook);
     bindCards(main);
   }
+
+  // ---------- printing ----------
+  var BOOK_LOGO = '<svg viewBox="0 0 88 88" width="120" height="120" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    '<circle cx="44" cy="44" r="41.5" stroke="#6B2A3E" stroke-width="1.4"/>' +
+    '<circle cx="44" cy="44" r="36" stroke="#9C7A2E" stroke-width="1"/>' +
+    '<path d="M20 44c-4 6-4 12 0 17M68 44c4 6 4 12 0 17" stroke="#9C7A2E" stroke-width="1.1" stroke-linecap="round"/>' +
+    '<path d="M17 61c3 1 5 3 5.5 6M71 61c-3 1-5 3-5.5 6" stroke="#9C7A2E" stroke-width="1.1" stroke-linecap="round"/>' +
+    '<rect x="30" y="49" width="28" height="15" rx="4" fill="#fff" stroke="#6B2A3E" stroke-width="1.6"/>' +
+    '<path d="M36 53v8M44 53v8M52 53v8" stroke="#6B2A3E" stroke-width="1" stroke-linecap="round" opacity="0.55"/>' +
+    '<path d="M25 33c0-6.5 5-11 10-9.5 1.5-4.5 9.5-6 11-1 2-4.5 10-3.5 10.5 2 5.5-.5 9 4 8.5 9.5-.3 5-3.3 8-8.3 8H33c-5.3 0-8.3-3.5-8-8.5Z" fill="#fff" stroke="#6B2A3E" stroke-width="1.6" stroke-linejoin="round"/>' +
+    '</svg>';
+
+  function bookRecipe(r) {
+    var ing = (r.ingredients || []).map(function (i) {
+      var t = String(i);
+      return '<li' + (/:\s*$/.test(t) ? ' class="sub"' : '') + '>' + escapeHtml(t) + '</li>';
+    }).join('');
+    var hasBody = ing || r.instructions;
+    return '<article class="book-recipe">' +
+      '<h3>' + escapeHtml(r.title) + '</h3>' +
+      (r.source ? '<div class="bsrc">' + escapeHtml(r.source) + '</div>' : '') +
+      (ing ? '<h4>Ingredients</h4><ul' + ((r.ingredients || []).length > 4 ? ' class="cols"' : '') + '>' + ing + '</ul>' : '') +
+      (r.instructions ? '<h4>Directions</h4><p>' + escapeHtml(r.instructions) + '</p>' : '') +
+      (!hasBody && r.raw ? '<p>' + escapeHtml(r.raw) + '</p>' : '') +
+      '</article>';
+  }
+
+  function buildBookHtml() {
+    var dateStr = new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    var html = '<section class="book-cover">' + BOOK_LOGO +
+      '<h1>Lemel\'s Family Cookbook</h1>' +
+      '<div class="btag">Every recipe worth keeping, all in one place</div>' +
+      '<div class="bmeta">' + recipes.length + ' recipes &middot; ' + categories.length + ' categories</div>' +
+      '<div class="bmeta">Printed ' + escapeHtml(dateStr) + '</div></section>';
+    html += '<section class="book-toc"><h2>Contents</h2>' + categories.map(function (c) {
+      var n = recipes.filter(function (r) { return r.category === c; }).length;
+      return '<div class="toc-row"><span>' + escapeHtml(c) + '</span><span>' + n + (n === 1 ? ' recipe' : ' recipes') + '</span></div>';
+    }).join('') + '</section>';
+    categories.forEach(function (c) {
+      var list = recipes.filter(function (r) { return r.category === c; }).sort(function (a, b) {
+        return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+      });
+      html += '<section class="book-cat" style="--cc:' + (CAT_COLORS[c] || '#6B2A3E') + '">' +
+        '<h2 class="book-cat-title">' + escapeHtml(c) + '</h2>' +
+        '<div class="book-recipes">' + list.map(bookRecipe).join('') + '</div></section>';
+    });
+    return html;
+  }
+
+  function printBook() {
+    var root = document.getElementById('book-root');
+    if (!root) return;
+    root.innerHTML = buildBookHtml();
+    document.body.classList.add('print-book');
+    setTimeout(function () { window.print(); }, 200);
+  }
+
+  function printRecipe() {
+    document.body.classList.add('print-single');
+    window.print();
+  }
+
+  window.addEventListener('afterprint', function () {
+    document.body.classList.remove('print-book', 'print-single');
+    var root = document.getElementById('book-root');
+    if (root) root.innerHTML = '';
+  });
 
   function sortList(list) {
     var sorted = list.slice();
@@ -442,7 +578,7 @@
     var actionsHtml = '<button class="btn" id="print-btn">Print</button>';
     if (canEdit) actionsHtml += '<button class="btn" id="edit-btn">Edit</button>';
     actions.innerHTML = actionsHtml;
-    document.getElementById('print-btn').addEventListener('click', function () { window.print(); });
+    document.getElementById('print-btn').addEventListener('click', printRecipe);
     if (canEdit) {
       document.getElementById('edit-btn').addEventListener('click', function () { openForm(r); });
     }
